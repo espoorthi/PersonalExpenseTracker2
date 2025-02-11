@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        canvas { max-width: 600px; margin: 20px auto; }
+    </style>
+</head>
+<body>
+    <h2>Expense Dashboard</h2>
+    <p>Logged in as: <span id="loggedInUser"></span></p>
+
+    <h3>Expenses by Category</h3>
+    <canvas id="categoryChart"></canvas>
+
+    <h3>Expenses by Date</h3>
+    <canvas id="dateChart"></canvas>
+
+    <button id="logout">Logout</button>
+
+    <script>
+        let currentUser = localStorage.getItem("loggedInUser");
+        if (!currentUser) {
+            alert("You must log in first!");
+            window.location.href = "login.html";
+        }
+        document.getElementById("loggedInUser").innerText = currentUser;
+
+        function getUserExpenses() {
+            return JSON.parse(localStorage.getItem(`expenses_${currentUser}`)) || [];
+        }
+
+        function generateCategoryChart(expenses) {
+            let categoryTotals = {};
+            expenses.forEach(exp => {
+                categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + parseFloat(exp.amount);
+            });
+
+            new Chart(document.getElementById("categoryChart"), {
+                type: "pie",
+                data: {
+                    labels: Object.keys(categoryTotals),
+                    datasets: [{
+                        data: Object.values(categoryTotals),
+                        backgroundColor: ["red", "blue", "green", "yellow", "purple"]
+                    }]
+                }
+            });
+        }
+
+        function generateDateChart(expenses) {
+            let dateTotals = {};
+            expenses.forEach(exp => {
+                dateTotals[exp.date] = (dateTotals[exp.date] || 0) + parseFloat(exp.amount);
+            });
+
+            new Chart(document.getElementById("dateChart"), {
+                type: "bar",
+                data: {
+                    labels: Object.keys(dateTotals),
+                    datasets: [{
+                        label: "Expenses by Date",
+                        data: Object.values(dateTotals),
+                        backgroundColor: "blue"
+                    }]
+                }
+            });
+        }
+
+        function loadDashboard() {
+            let expenses = getUserExpenses();
+            generateCategoryChart(expenses);
+            generateDateChart(expenses);
+        }
+
+        document.getElementById("logout").addEventListener("click", function() {
+            localStorage.removeItem("loggedInUser");
+            alert("Logged out successfully!");
+            window.location.href = "login.html";
+        });
+
+        loadDashboard();
+    </script>
+</body>
+</html>
